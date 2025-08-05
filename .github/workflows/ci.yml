@@ -1,22 +1,25 @@
 name: "CI/CD Pipeline"
 on:
-  push:
-    branches-ignore:
-      - l10n_develop
-      - gh-pages
-    paths-ignore:
-      - '*.md'
-      - 'LICENSE'
-      - 'monitoring/grafana-dashboard.json'
-      - 'screenshots/**'
-    tags-ignore:
-      - '*'
-  pull_request:
-    paths-ignore:
-      - '*.md'
-      - 'LICENSE'
-      - 'data/static/i18n/*.json'
-      - 'frontend/src/assets/i18n/*.json'
+  workflow_dispatch:
+# on:
+#   push:
+#     branches-ignore:
+#       - l10n_develop
+#       - gh-pages
+#     paths-ignore:
+#       - '*.md'
+#       - 'LICENSE'
+#       - 'monitoring/grafana-dashboard.json'
+#       - 'screenshots/**'
+#     tags-ignore:
+#       - '*'
+#   pull_request:
+#     paths-ignore:
+#       - '*.md'
+#       - 'LICENSE'
+#       - 'data/static/i18n/*.json'
+#       - 'frontend/src/assets/i18n/*.json'
+
 env:
   NODE_DEFAULT_VERSION: 22
   NODE_OPTIONS: "--max_old_space_size=4096"
@@ -40,18 +43,8 @@ jobs:
         run: npm run lint
       - name: "Lint customization configs"
         run: >
-          npm run lint:config -- -f ./config/7ms.yml &&
-          npm run lint:config -- -f ./config/addo.yml &&
-          npm run lint:config -- -f ./config/bodgeit.yml &&
-          npm run lint:config -- -f ./config/ctf.yml &&
-          npm run lint:config -- -f ./config/default.yml &&
-          npm run lint:config -- -f ./config/fbctf.yml &&
-          npm run lint:config -- -f ./config/juicebox.yml &&
-          npm run lint:config -- -f ./config/mozilla.yml &&
-          npm run lint:config -- -f ./config/oss.yml &&
-          npm run lint:config -- -f ./config/quiet.yml &&
-          npm run lint:config -- -f ./config/tutorial.yml &&
-          npm run lint:config -- -f ./config/unsafe.yml
+          npm run lint:config -- -f ./config/7ms.yml && npm run lint:config -- -f ./config/addo.yml && npm run lint:config -- -f ./config/bodgeit.yml && npm run lint:config -- -f ./config/ctf.yml && npm run lint:config -- -f ./config/default.yml && npm run lint:config -- -f ./config/fbctf.yml && npm run lint:config -- -f ./config/juicebox.yml && npm run lint:config -- -f ./config/mozilla.yml && npm run lint:config -- -f ./config/oss.yml && npm run lint:config -- -f ./config/quiet.yml && npm run lint:config -- -f ./config/tutorial.yml && npm run lint:config -- -f ./config/unsafe.yml
+
   coding-challenge-rsn:
     runs-on: windows-latest
     steps:
@@ -180,17 +173,8 @@ jobs:
           timeout_minutes: 30
           max_attempts: 3
           command: >
-            NODE_ENV=7ms npm run test:server &&
-            NODE_ENV=addo npm run test:server &&
-            NODE_ENV=bodgeit npm run test:server &&
-            NODE_ENV=ctf npm run test:server &&
-            NODE_ENV=fbctf npm run test:server &&
-            NODE_ENV=juicebox npm run test:server &&
-            NODE_ENV=mozilla npm run test:server &&
-            NODE_ENV=oss npm run test:server &&
-            NODE_ENV=quiet npm run test:server &&
-            NODE_ENV=tutorial npm run test:server &&
-            NODE_ENV=unsafe npm run test:server
+            NODE_ENV=7ms npm run test:server && NODE_ENV=addo npm run test:server && NODE_ENV=bodgeit npm run test:server && NODE_ENV=ctf npm run test:server && NODE_ENV=fbctf npm run test:server && NODE_ENV=juicebox npm run test:server && NODE_ENV=mozilla npm run test:server && NODE_ENV=oss npm run test:server && NODE_ENV=quiet npm run test:server && NODE_ENV=tutorial npm run test:server && NODE_ENV=unsafe npm run test:server
+
   e2e:
     runs-on: ${{ matrix.os }}
     strategy:
