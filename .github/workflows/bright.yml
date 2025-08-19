@@ -1,0 +1,63 @@
+name: Bright
+on:
+  pull_request:
+    branches:
+      - '**'
+permissions:
+  checks: write
+  contents: read
+  id-token: write
+jobs:
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: "--max_old_space_size=4096"
+      BRIGHT_HOSTNAME: ${{ vars.BRIGHT_HOSTNAME }}
+      BRIGHT_PROJECT_ID: ${{ vars.BRIGHT_PROJECT_ID }}
+      BRIGHT_AUTH_ID: ${{ vars.BRIGHT_AUTH_ID }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BRIGHT_TOKEN: ${{ secrets.BRIGHT_TOKEN }}
+      BRIGHT_TARGET_URL: "http://127.0.0.1:3000"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Use Node.js 20.x for app install
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+      - name: Install application dependencies
+        run: |
+          npm install
+          cd frontend
+          npm install --legacy-peer-deps
+          cd ..
+      - name: Build application
+        run: npm run build:frontend && npm run build:server
+      - name: Start application (Docker)
+        run: |
+          docker build -t juice-shop .
+          docker run -d -p 3000:3000 --name juice-shop-test juice-shop
+      - name: Wait for application port 3000 to be ready
+        run: |
+          for i in {1..30}; do nc -z 127.0.0.1 3000 && exit 0; sleep 2; done
+          echo "Port 3000 did not become available in time"; docker logs juice-shop-test; exit 1
+      - name: Use Node.js 22.x for security tests
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+      - name: Install SecTesterJS dependencies in .brightsec
+        run: |
+          npm i --save=false --prefix .brightsec @sectester/core @sectester/repeater @sectester/scan @sectester/runner @sectester/reporter
+      - name: Run Bright security tests
+        run: node --experimental-transform-types --experimental-strip-types --experimental-detect-module --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning --test-force-exit --test-concurrency=4 --test .brightsec/tests/*.test.ts
+        env:
+          BRIGHT_HOSTNAME: ${{ vars.BRIGHT_HOSTNAME }}
+          BRIGHT_PROJECT_ID: ${{ vars.BRIGHT_PROJECT_ID }}
+          BRIGHT_AUTH_ID: ${{ vars.BRIGHT_AUTH_ID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRIGHT_TOKEN: ${{ secrets.BRIGHT_TOKEN }}
+          BRIGHT_TARGET_URL: "http://127.0.0.1:3000"
+      - name: Stop and remove application container
+        if: always()
+        run: docker rm -f juice-shop-test || true
